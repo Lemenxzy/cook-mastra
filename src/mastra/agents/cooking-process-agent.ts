@@ -47,7 +47,7 @@ export const cookingProcessAgent = new Agent({
         可用的MCP工具：
         - cookingServer_getAllRecipesTool: 获取所有菜谱列表
         - cookingServer_getRecipesByCategoryTool: 根据分类获取菜谱
-        - cookingServer_getRecipeByIdTool: 根据ID或名称获取详细菜谱信息  
+        - cookingServer_getRecipeByIdTool: 根据名称获取详细菜谱信息  
         - cookingServer_whatToEatTool: 根据人数推荐菜品组合
         - cookingServer_recommendMealsTool: 生成个性化的膳食计划
 
