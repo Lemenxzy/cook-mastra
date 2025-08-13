@@ -1,0 +1,29 @@
+name = "cook-mastra-worker"
+main = "./dist/worker.js"
+compatibility_date = "2023-12-01"
+
+[build]
+command = "npm run build:worker"
+cwd = "./"
+watch_dir = "src"
+
+# 开发环境变量
+[vars]
+NODE_ENV = "development"
+MCP_SERVER_URL = "http://localhost:3000/sse"
+
+# 生产环境配置
+[env.production]
+name = "cook-mastra-worker-prod"
+
+[env.production.vars]
+NODE_ENV = "production"
+MCP_SERVER_URL = "https://cookai.chuzilaoxu.uk/sse"
+
+# 预发环境配置
+[env.staging]
+name = "cook-mastra-worker-staging"
+
+[env.staging.vars]
+NODE_ENV = "staging"
+MCP_SERVER_URL = "https://cookai.chuzilaoxu.uk/sse"
