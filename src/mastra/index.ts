@@ -11,19 +11,19 @@ import {createCookMCPServer} from './mcp/mcp-cooking/mcp-server';
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 import { config } from "dotenv";
 
-if (process.env.NODE_ENV !== 'production') {
-  config();
-  if (
-    typeof process !== "undefined" &&
-    process?.versions?.node &&
-    process.env.PROXY_URL
-  ) {
-    const { setGlobalDispatcher, ProxyAgent } = await import("undici");
-    setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
-    console.log("[proxy] using", process.env.PROXY_URL);
-  }
-}
-console.log(process.env.CLOUDFLARE_ACCOUNT_EMAIL, process.env.CLOUDFLARE_API_TOKEN);
+// if (process.env.NODE_ENV !== 'production') {
+//   config();
+//   if (
+//     typeof process !== "undefined" &&
+//     process?.versions?.node &&
+//     process.env.PROXY_URL
+//   ) {
+//     const { setGlobalDispatcher, ProxyAgent } = await import("undici");
+//     setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
+//     console.log("[proxy] using", process.env.PROXY_URL);
+//   }
+// }
+
 const cookServer = await createCookMCPServer();
 const nutritionServer = await createNutritionMCPServer();
 export const mastra = new Mastra({
