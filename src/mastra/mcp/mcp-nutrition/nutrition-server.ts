@@ -3,17 +3,19 @@ import { createGetCalorieInfoTool, createGetMultipleCaloriesTool } from './tools
 import { initializeFatSecretOAuth2 } from './auth/oauth2';
 import { config } from "dotenv";
 
-config();
-
-if (
-  typeof process !== "undefined" &&
-  process?.versions?.node &&
-  process.env.PROXY_URL
-) {
-  const { setGlobalDispatcher, ProxyAgent } = await import("undici");
-  setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
-  console.log("[proxy] using", process.env.PROXY_URL);
+if (process.env.NODE_ENV !== 'production') {
+  config();
+  if (
+    typeof process !== "undefined" &&
+    process?.versions?.node &&
+    process.env.PROXY_URL
+  ) {
+    const { setGlobalDispatcher, ProxyAgent } = await import("undici");
+    setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
+    console.log("[proxy] using", process.env.PROXY_URL);
+  }
 }
+
 
 
 // 初始化认证

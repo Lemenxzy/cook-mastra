@@ -1,9 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { Agent } from '@mastra/core/agent';
 import { MCPClient } from '@mastra/mcp';
-import { config } from "dotenv";
-
-config();
 
 // 创建专门的烹饪制作流程客户端 - 只连接cooking server
 const cookingMCPClient = new MCPClient({

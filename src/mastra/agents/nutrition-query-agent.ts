@@ -1,10 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { LibSQLStore } from "@mastra/libsql";
 import { MCPClient } from "@mastra/mcp";
-import { config } from "dotenv";
 
-config();
 
 // 创建专门的营养查询客户端 - 只连接nutrition server
 const nutritionMCPClient = new MCPClient({

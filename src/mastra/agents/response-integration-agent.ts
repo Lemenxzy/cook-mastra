@@ -1,9 +1,5 @@
 import { openai } from '@ai-sdk/openai';
 import { Agent } from '@mastra/core/agent';
-import { LibSQLStore } from '@mastra/libsql';
-import { config } from "dotenv";
-
-config();
 
 // 创建专门的响应整合Agent
 export const responseIntegrationAgent = new Agent({

@@ -9,9 +9,6 @@ import {
   createWhatToEatTool
 } from './tools';
 
-import { config } from "dotenv";
-
-config();
 
 // 初始化数据
 async function initializeData() {
