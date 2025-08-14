@@ -1,6 +1,5 @@
 
 import { Mastra } from '@mastra/core/mastra';
-import { PinoLogger } from '@mastra/loggers';
 import { cookingNutritionWorkflow } from "./workflows/cooking-workflow-new";
 import { cookingProcessAgent } from "./agents/cooking-process-agent";
 import { nutritionQueryAgent } from "./agents/nutrition-query-agent";
@@ -99,10 +98,6 @@ export const mastra = new Mastra({
       }),
     ],
   },
-  logger: new PinoLogger({
-    name: "Cook-Mastra",
-    level: "info",
-  }),
 });
 
 
