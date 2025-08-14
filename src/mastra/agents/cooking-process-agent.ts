@@ -12,7 +12,7 @@ const cookingMCPClient = new MCPClient({
       url: new URL(
         `/api/mcp/cookMCPServer/mcp`,
         process.env.NODE_ENV === "production"
-          ? "https://cookapi.chuzilaoxu.uk"
+          ? "https://cook-mastra-api.chuzilaoxu.uk"
           : "http://localhost:4112"
       ),
     },
