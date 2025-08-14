@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development mastra dev",
-    "build": "cross-env NODE_ENV=production MASTRA_TELEMETRY_DISABLED=1 mastra build",
+    "build": "cross-env NODE_ENV=production mastra build",
     "build:web": "cd src/web && npm run build",
     "worker:dev": "wrangler dev",
     "worker:deploy": "wrangler deploy --config .mastra/output/wrangler.json"

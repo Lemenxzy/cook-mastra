@@ -29,7 +29,7 @@ export const mastra = new Mastra({
     responseIntegrationAgent,
   },
   deployer: new CloudflareDeployer({
-    projectName: "cooking-agents",
+    projectName: "cook-mastra-api",
     scope: process.env.CLOUDFLARE_ACCOUNT_EMAIL || "",
     auth: {
       apiToken: process.env.CLOUDFLARE_API_TOKEN || "",
