@@ -1,0 +1,170 @@
+import { QuickAction } from '../types';
+
+export const quickActions: QuickAction[] = [
+  // 经典菜品
+  {
+    id: "1",
+    title: "红烧肉怎么做",
+    description: "学做经典红烧肉",
+    query: "红烧肉怎么做",
+    icon: "🥩",
+    category: "single",
+    color: "bg-red-500",
+  },
+  {
+    id: "2",
+    title: "麻婆豆腐制作",
+    description: "川菜经典麻婆豆腐",
+    query: "麻婆豆腐怎么做",
+    icon: "🌶️",
+    category: "single",
+    color: "bg-orange-500",
+  },
+  {
+    id: "3",
+    title: "宫保鸡丁做法",
+    description: "酸甜开胃宫保鸡丁",
+    query: "宫保鸡丁怎么做",
+    icon: "🐔",
+    category: "single",
+    color: "bg-yellow-500",
+  },
+  {
+    id: "4",
+    title: "糖醋里脊",
+    description: "酸甜可口的糖醋里脊",
+    query: "糖醋里脊怎么做",
+    icon: "🍖",
+    category: "single",
+    color: "bg-pink-500",
+  },
+
+  // 食材查询
+  {
+    id: "5",
+    title: "豆腐菜谱",
+    description: "豆腐的各种做法",
+    query: "豆腐",
+    icon: "🧈",
+    category: "ingredient",
+    color: "bg-green-500",
+  },
+  {
+    id: "6",
+    title: "鸡蛋料理",
+    description: "鸡蛋的美味做法",
+    query: "鸡蛋",
+    icon: "🥚",
+    category: "ingredient",
+    color: "bg-yellow-400",
+  },
+  {
+    id: "7",
+    title: "土豆菜品",
+    description: "土豆的多种烹饪方式",
+    query: "土豆",
+    icon: "🥔",
+    category: "ingredient",
+    color: "bg-amber-600",
+  },
+  {
+    id: "8",
+    title: "西红柿菜谱",
+    description: "西红柿的健康做法",
+    query: "西红柿",
+    icon: "🍅",
+    category: "ingredient",
+    color: "bg-red-400",
+  },
+
+  // 组合推荐
+  {
+    id: "9",
+    title: "早餐吃什么",
+    description: "营养早餐搭配推荐",
+    query: "早上吃什么",
+    icon: "🌅",
+    category: "combination",
+    color: "bg-blue-500",
+  },
+  {
+    id: "10",
+    title: "午餐推荐",
+    description: "丰盛午餐菜品搭配",
+    query: "中午吃什么",
+    icon: "☀️",
+    category: "combination",
+    color: "bg-indigo-500",
+  },
+  {
+    id: "11",
+    title: "晚餐建议",
+    description: "健康晚餐菜谱推荐",
+    query: "晚上吃什么",
+    icon: "🌙",
+    category: "combination",
+    color: "bg-purple-500",
+  },
+  {
+    id: "12",
+    title: "两人晚餐",
+    description: "浪漫二人世界晚餐",
+    query: "两人晚餐吃什么",
+    icon: "💑",
+    category: "combination",
+    color: "bg-pink-400",
+  },
+
+  // 特色菜品
+  {
+    id: "13",
+    title: "清蒸鲈鱼",
+    description: "清淡鲜美的清蒸鲈鱼",
+    query: "清蒸鲈鱼怎么做",
+    icon: "🐟",
+    category: "single",
+    color: "bg-cyan-500",
+  },
+  {
+    id: "14",
+    title: "手工水饺做法",
+    description: "经典手工水饺的制作方法",
+    query: "手工水饺怎么做",
+    icon: "🥟",
+    category: "single",
+    color: "bg-red-600",
+  },
+  {
+    id: "15",
+    title: "炒方便面",
+    description: "简单快捷的炒方便面",
+    query: "炒方便面怎么做",
+    icon: "🍜",
+    category: "single",
+    color: "bg-green-400",
+  },
+  {
+    id: "16",
+    title: "水煮牛肉",
+    description: "麻辣鲜香的水煮牛肉",
+    query: "水煮牛肉怎么做",
+    icon: "🐂",
+    category: "single",
+    color: "bg-yellow-300",
+  },
+  {
+    id: "17",
+    title: "冰粉的做法",
+    description: "清凉解暑的冰粉制作",
+    query: "冰粉怎么做",
+    icon: "🍧",
+    category: "single",
+    color: "bg-blue-300",
+  }
+];
+
+export const categoryLabels = {
+  single: '经典菜谱',
+  ingredient: '食材料理',
+  combination: '搭配推荐'
+} as const;

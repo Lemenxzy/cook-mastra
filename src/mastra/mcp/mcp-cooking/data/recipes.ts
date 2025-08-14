@@ -1,4 +1,4 @@
-import { Recipe } from '../../mcp-sever/types/index.js'
+import { Recipe } from '../types/index.js'
 
 // 远程菜谱JSON文件URL
 const RECIPES_URL = 'https://weilei.site/all_recipes.json'

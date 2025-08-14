@@ -4,32 +4,64 @@ import { AutocompleteResponse, RecipeInfo, FoodSuggestion, NutritionInfo } from 
 export class FatSecretAPI {
   private baseUrl = 'https://platform.fatsecret.com/rest';
 
-  // 食物名称自动补全
+  // 食物名称自动补全（带备用方案）
   async searchFoodAutocomplete(expression: string, maxResults: number = 4): Promise<FoodSuggestion[]> {
     try {
-      const oauth2Client = getFatSecretOAuth2Client();
-      const authHeaders = await oauth2Client.getAuthHeaders();
-
-      const params = new URLSearchParams({
-        expression,
-        max_results: maxResults.toString(),
-        format: "json",
-        region: "CN"
-      });
-
-      const response = await fetch(`${this.baseUrl}/food/autocomplete/v2?${params}`, {
-        headers: authHeaders
-      });
-
-      if (!response.ok) {
-        throw new Error(`FatSecret autocomplete API error: ${response.status} ${response.statusText}`);
+      return await this.tryAutocompleteAPI(expression, maxResults);
+    } catch (error) {
+      // 如果autocomplete API失败（比如缺少premier权限），尝试使用foods.search API
+      console.warn('Autocomplete API failed, trying fallback food search:', error?.message || error);
+      
+      try {
+        return await this.tryFoodSearchAPI(expression, maxResults);
+      } catch (fallbackError) {
+        console.error('Both autocomplete and search APIs failed:', fallbackError?.message || fallbackError);
+        // 返回空数组，让系统使用估算模式
+        return [];
       }
+    }
+  }
 
-      const data: AutocompleteResponse = await response.json();
-      console.log('FatSecret autocomplete response:', data);
-      // 处理API响应格式的差异
+  // 尝试使用autocomplete API
+  private async tryAutocompleteAPI(expression: string, maxResults: number): Promise<FoodSuggestion[]> {
+    const oauth2Client = getFatSecretOAuth2Client();
+    const authHeaders = await oauth2Client.getAuthHeaders();
+
+    const params = new URLSearchParams({
+      expression,
+      max_results: maxResults.toString(),
+      format: "json",
+      region: "CN"
+    });
+
+    const response = await fetch(`${this.baseUrl}/food/autocomplete/v2?${params}`, {
+      headers: authHeaders
+    });
+
+    const responseText = await response.text();
+    console.log('FatSecret autocomplete response:', responseText);
+
+    if (!response.ok) {
+      console.error(`FatSecret autocomplete API error: ${response.status} ${response.statusText}`, responseText);
+      
+      // 检查是否是权限问题
+      if (response.status === 401 || responseText.includes('premier')) {
+        throw new Error('FatSecret API需要premier订阅权限才能使用autocomplete功能');
+      }
+      
+      throw new Error(`FatSecret autocomplete API error: ${response.status} ${response.statusText} - ${responseText}`);
+    }
+
+    try {
+      const data: AutocompleteResponse = JSON.parse(responseText);
+      
+      // 检查是否有API级别的错误（比如IP限制）
+      if (data.error) {
+        console.error('FatSecret API返回错误:', data.error);
+        throw new Error(`FatSecret API error: ${data.error.message} (code: ${data.error.code})`);
+      }
+      
       if (data.suggestions && data.suggestions.suggestion) {
-        // 确保返回数组格式
         const suggestions = Array.isArray(data.suggestions.suggestion) 
           ? data.suggestions.suggestion 
           : [data.suggestions.suggestion];
@@ -41,8 +73,61 @@ export class FatSecretAPI {
       }
 
       return [];
+    } catch (parseError) {
+      console.error('解析FatSecret响应失败:', parseError);
+      throw new Error(`FatSecret API响应解析失败: ${responseText}`);
+    }
+  }
+
+  // 备用方案：使用foods.search API（basic权限即可）
+  private async tryFoodSearchAPI(expression: string, maxResults: number): Promise<FoodSuggestion[]> {
+    try {
+      const oauth2Client = getFatSecretOAuth2Client();
+      const authHeaders = await oauth2Client.getAuthHeaders();
+
+      const params = new URLSearchParams({
+        search_expression: expression,
+        max_results: maxResults.toString(),
+        format: "json"
+      });
+
+      const response = await fetch(`${this.baseUrl}/foods/search/v1?${params}`, {
+        headers: authHeaders
+      });
+
+      const responseText = await response.text();
+      console.log('FatSecret food search response:', responseText);
+
+      if (!response.ok) {
+        console.error(`FatSecret search API error: ${response.status} ${response.statusText}`, responseText);
+        throw new Error(`FatSecret search API error: ${response.status} ${response.statusText} - ${responseText}`);
+      }
+
+      try {
+        const data = JSON.parse(responseText) as { foods?: { food?: any[] }, error?: { code: number, message: string } };
+        
+        // 检查是否有API级别的错误（比如IP限制）
+        if (data.error) {
+          console.error('FatSecret Search API返回错误:', data.error);
+          throw new Error(`FatSecret API error: ${data.error.message} (code: ${data.error.code})`);
+        }
+
+        if (data.foods && data.foods.food) {
+          const foods = Array.isArray(data.foods.food) ? data.foods.food : [data.foods.food];
+          
+          return foods.slice(0, maxResults).map((food: any) => ({
+            food_name: food.food_name,
+            food_id: food.food_id
+          }));
+        }
+
+        return [];
+      } catch (parseError) {
+        console.error('解析FatSecret search响应失败:', parseError);
+        throw new Error(`FatSecret Search API响应解析失败: ${responseText}`);
+      }
     } catch (error) {
-      console.error('FatSecret autocomplete search failed:', error);
+      console.error('FatSecret food search API failed:', error);
       throw error;
     }
   }

@@ -18,7 +18,7 @@ export class FatSecretOAuth2 {
   constructor(config: FatSecretOAuth2Config) {
     this.clientId = config.clientId;
     this.clientSecret = config.clientSecret;
-    this.scope = config.scope || 'basic'; // 默认使用basic scope
+    this.scope = config.scope || 'premier'; // 默认使用premier scope以支持autocomplete API
   }
 
   // 获取访问令牌
@@ -105,26 +105,31 @@ export class FatSecretOAuth2 {
 // 全局OAuth2客户端实例
 let oauth2Client: FatSecretOAuth2 | null = null;
 
-export function initializeFatSecretOAuth2(scope: string = 'basic'): FatSecretOAuth2 {
+export function initializeFatSecretOAuth2(scope?: string): FatSecretOAuth2 {
   if (!oauth2Client) {
     const clientId = process.env.FATSECRET_CLIENT_ID;
     const clientSecret = process.env.FATSECRET_CLIENT_SECRET;
+    const envScope = process.env.FATSECRET_SCOPE;
 
     if (!clientId || !clientSecret) {
       throw new Error(
         'FatSecret OAuth2 credentials not found. Please set:\n' +
         '- FATSECRET_CLIENT_ID\n' +
-        '- FATSECRET_CLIENT_SECRET'
+        '- FATSECRET_CLIENT_SECRET\n' +
+        '- FATSECRET_SCOPE (optional: basic, premier, barcode, etc.)'
       );
     }
+
+    // 优先级：参数 > 环境变量 > 默认值
+    const finalScope = scope || envScope || 'premier';
 
     oauth2Client = new FatSecretOAuth2({
       clientId,
       clientSecret,
-      scope
+      scope: finalScope
     });
 
-    console.log(`FatSecret OAuth2 client initialized with scope: ${scope}`);
+    console.log(`FatSecret OAuth2 client initialized with scope: ${finalScope}`);
   }
 
   return oauth2Client;
