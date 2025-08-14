@@ -1,7 +1,7 @@
-import { openai } from '@ai-sdk/openai';
-import { Agent } from '@mastra/core/agent';
-import { LibSQLStore } from '@mastra/libsql';
-import { MCPClient } from '@mastra/mcp';
+import { openai } from "@ai-sdk/openai";
+import { Agent } from "@mastra/core/agent";
+import { LibSQLStore } from "@mastra/libsql";
+import { MCPClient } from "@mastra/mcp";
 import { config } from "dotenv";
 
 config();
@@ -11,12 +11,14 @@ const nutritionMCPClient = new MCPClient({
   servers: {
     nutrition: {
       url: new URL(
-        `http://localhost:${process.env.PORT}/api/mcp/nutritionMCPServer/mcp`
+        `/api/mcp/nutritionMCPServer/mcp`,
+        process.env.NODE_ENV === "production"
+          ? "https://cookapi.chuzilaoxu.uk"
+          : "http://localhost:4112"
       ),
     },
   },
 });
-
 
 export const nutritionQueryAgent = new Agent({
   name: "Nutrition Analysis Specialist",

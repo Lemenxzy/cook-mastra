@@ -10,7 +10,10 @@ const cookingMCPClient = new MCPClient({
   servers: {
     cooking: {
       url: new URL(
-        `http://localhost:${process.env.PORT}/api/mcp/cookMCPServer/mcp`
+        `/api/mcp/cookMCPServer/mcp`,
+        process.env.NODE_ENV === "production"
+          ? "https://cookapi.chuzilaoxu.uk"
+          : "http://localhost:4112"
       ),
     },
   },
