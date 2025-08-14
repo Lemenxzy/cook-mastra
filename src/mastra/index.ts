@@ -9,14 +9,19 @@ import { registerApiRoute } from "@mastra/core/server";
 import {createNutritionMCPServer} from './mcp/mcp-nutrition/nutrition-server';
 import {createCookMCPServer} from './mcp/mcp-cooking/mcp-server';
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
-if (
-  typeof process !== "undefined" &&
-  process?.versions?.node &&
-  process.env.PROXY_URL
-) {
-  const { setGlobalDispatcher, ProxyAgent } = await import("undici");
-  setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
-  console.log("[proxy] using", process.env.PROXY_URL);
+import { config } from "dotenv";
+
+if (process.env.NODE_ENV !== 'production') {
+  config();
+  if (
+    typeof process !== "undefined" &&
+    process?.versions?.node &&
+    process.env.PROXY_URL
+  ) {
+    const { setGlobalDispatcher, ProxyAgent } = await import("undici");
+    setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
+    console.log("[proxy] using", process.env.PROXY_URL);
+  }
 }
 console.log(process.env.CLOUDFLARE_ACCOUNT_EMAIL, process.env.CLOUDFLARE_API_TOKEN);
 const cookServer = await createCookMCPServer();
