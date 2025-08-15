@@ -9,6 +9,6 @@ compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 # OPENAI_API_KEY
 # PROXY_URL (optional)
 
-# Cron triggers for warmup
-[[triggers.crons]]
-cron = "*/15 * * * *"  # Every 15 minutes
+# Cron triggers disabled - use /warmup endpoint instead
+# [[triggers.crons]]
+# cron = "*/15 * * * *"  # Every 15 minutes
