@@ -25,6 +25,7 @@
     "@mastra/libsql": "^0.13.1",
     "@mastra/loggers": "^0.10.6",
     "@mastra/mcp": "^0.10.10",
+    "@opentelemetry/auto-instrumentations-node": "^0.62.1",
     "cross-env": "^10.0.0",
     "dotenv": "^17.2.1",
     "hono": "^4.9.0",

@@ -1,0 +1,13 @@
+name = "cook-mastra-api"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment variables (set these in your Cloudflare dashboard or use wrangler secret)
+# CLOUDFLARE_API_TOKEN
+# CLOUDFLARE_ACCOUNT_EMAIL  
+# OPENAI_API_KEY
+# PROXY_URL (optional)
+
+# Cron triggers for warmup
+[[triggers.crons]]
+cron = "*/15 * * * *"  # Every 15 minutes

@@ -7,10 +7,11 @@ import { responseIntegrationAgent } from "./agents/response-integration-agent";
 import { registerApiRoute } from "@mastra/core/server";
 import {createNutritionMCPServer} from './mcp/mcp-nutrition/nutrition-server';
 import {createCookMCPServer} from './mcp/mcp-cooking/mcp-server';
+import { LazyMCPServer } from './mcp/lazy-mcp-server';
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 import { config } from "dotenv";
 
-if (process.env.NODE_ENV !== 'production') {
+if (process && process.env && process.env.NODE_ENV === "development") {
   config();
   if (
     typeof process !== "undefined" &&
@@ -23,15 +24,45 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
-// const cookServer = await createCookMCPServer();
-// const nutritionServer = await createNutritionMCPServer();
+// Create lazy-loaded MCP servers for Cloudflare Workers compatibility
+const cookMCPServer = new LazyMCPServer(
+  createCookMCPServer,
+  {
+    name: "cooking",
+    version: "1.0.0",
+    tools: {} // Placeholder, will be replaced when initialized
+  }
+);
 
-let cookServerPromise: ReturnType<typeof createCookMCPServer> | null = null;
-let nutritionServerPromise: ReturnType<typeof createNutritionMCPServer> | null = null;
+const nutritionMCPServer = new LazyMCPServer(
+  createNutritionMCPServer,
+  {
+    name: "nutrition", 
+    version: "1.0.0",
+    tools: {} // Placeholder, will be replaced when initialized
+  }
+);
 
-const getCookServer = () => (cookServerPromise ??= createCookMCPServer()); // 注意：不要在顶层 await
-const getNutritionServer = () =>
-  (nutritionServerPromise ??= createNutritionMCPServer());
+// Helper functions for warmup and cron jobs - trigger initialization
+const warmupCookServer = async () => {
+  try {
+    await cookMCPServer.getToolListInfo(); // This will trigger initialization
+    return true;
+  } catch (error) {
+    console.error('Failed to warmup cook server:', error);
+    return false;
+  }
+};
+
+const warmupNutritionServer = async () => {
+  try {
+    await nutritionMCPServer.getToolListInfo(); // This will trigger initialization  
+    return true;
+  } catch (error) {
+    console.error('Failed to warmup nutrition server:', error);
+    return false;
+  }
+};
 
 
 export const mastra = new Mastra({
@@ -50,8 +81,8 @@ export const mastra = new Mastra({
     },
   }),
   mcpServers: {
-    cookMCPServer: await getCookServer(),
-    nutritionMCPServer: await getNutritionServer(),
+    cookMCPServer,
+    nutritionMCPServer,
   },
   server: {
     timeout: 30000,
@@ -77,8 +108,85 @@ export const mastra = new Mastra({
           });
         },
       }),
+      registerApiRoute("/warmup", {
+        method: "GET",
+        handler: async (c) => {
+          try {
+            console.log("开始预热MCP服务器...");
+            const startTime = Date.now();
+            
+            // 并行预热两个MCP服务器
+            const [cookResult, nutritionResult] = await Promise.all([
+              warmupCookServer(),
+              warmupNutritionServer()
+            ]);
+            
+            const endTime = Date.now();
+            console.log(`MCP服务器预热完成，耗时: ${endTime - startTime}ms`);
+            
+            return c.json({
+              status: "warmup_completed",
+              timestamp: new Date().toISOString(),
+              duration_ms: endTime - startTime,
+              servers: {
+                cookMCPServer: cookResult ? "initialized" : "failed",
+                nutritionMCPServer: nutritionResult ? "initialized" : "failed"
+              }
+            });
+          } catch (error) {
+            console.error("预热失败:", error);
+            return c.json({
+              status: "warmup_failed",
+              error: error instanceof Error ? error.message : "Unknown error",
+              timestamp: new Date().toISOString()
+            }, 500);
+          }
+        },
+      }),
     ],
   },
 });
+
+import { Hono } from 'hono';
+
+// Create a Hono app to handle requests
+const app = new Hono();
+
+// Mount Mastra's API routes
+const serverConfig = mastra.getServer();
+if (serverConfig?.apiRoutes) {
+  for (const route of serverConfig.apiRoutes) {
+    let handler;
+    
+    if ('handler' in route) {
+      handler = route.handler;
+    } else if ('createHandler' in route) {
+      handler = await route.createHandler({ mastra });
+    } else {
+      continue;
+    }
+    
+    app.on(route.method.toLowerCase() as any, route.path, handler);
+  }
+}
+
+// Cloudflare Workers export
+export default {
+  async fetch(request: Request, env: any, ctx: any) {
+    return app.fetch(request, env, ctx);
+  },
+  
+  async scheduled(event: any, env: any, ctx: any) {
+    console.log("Cron job triggered - warming up MCP servers");
+    try {
+      const startTime = Date.now();
+      await Promise.all([warmupCookServer(), warmupNutritionServer()]);
+      const endTime = Date.now();
+      console.log(`Cron warmup completed in ${endTime - startTime}ms`);
+    } catch (error) {
+      console.error("Cron warmup failed:", error);
+    }
+  }
+};
 
 
