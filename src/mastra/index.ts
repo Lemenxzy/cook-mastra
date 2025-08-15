@@ -24,29 +24,43 @@ import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 //   }
 // }
 
-// Create lazy-loaded MCP servers for Cloudflare Workers compatibility
-const cookMCPServer = new LazyMCPServer(
-  createCookMCPServer,
-  {
-    name: "cooking",
-    version: "1.0.0",
-    tools: {} // Placeholder, will be replaced when initialized
-  }
-);
+// Lazy MCP server factories to avoid global scope instantiation
+let cookMCPServer: LazyMCPServer | null = null;
+let nutritionMCPServer: LazyMCPServer | null = null;
 
-const nutritionMCPServer = new LazyMCPServer(
-  createNutritionMCPServer,
-  {
-    name: "nutrition", 
-    version: "1.0.0",
-    tools: {} // Placeholder, will be replaced when initialized
+function getCookMCPServer(): LazyMCPServer {
+  if (!cookMCPServer) {
+    cookMCPServer = new LazyMCPServer(
+      createCookMCPServer,
+      {
+        name: "cooking",
+        version: "1.0.0",
+        tools: {} // Placeholder, will be replaced when initialized
+      }
+    );
   }
-);
+  return cookMCPServer;
+}
+
+function getNutritionMCPServer(): LazyMCPServer {
+  if (!nutritionMCPServer) {
+    nutritionMCPServer = new LazyMCPServer(
+      createNutritionMCPServer,
+      {
+        name: "nutrition", 
+        version: "1.0.0",
+        tools: {} // Placeholder, will be replaced when initialized
+      }
+    );
+  }
+  return nutritionMCPServer;
+}
 
 // Helper functions for warmup and cron jobs - trigger initialization
 const warmupCookServer = async () => {
   try {
-    await cookMCPServer.getToolListInfo(); // This will trigger initialization
+    const server = getCookMCPServer();
+    await server.getToolListInfo(); // This will trigger initialization
     return true;
   } catch (error) {
     console.error('Failed to warmup cook server:', error);
@@ -56,7 +70,8 @@ const warmupCookServer = async () => {
 
 const warmupNutritionServer = async () => {
   try {
-    await nutritionMCPServer.getToolListInfo(); // This will trigger initialization  
+    const server = getNutritionMCPServer();
+    await server.getToolListInfo(); // This will trigger initialization  
     return true;
   } catch (error) {
     console.error('Failed to warmup nutrition server:', error);
@@ -64,6 +79,25 @@ const warmupNutritionServer = async () => {
   }
 };
 
+
+// Create a proxy object for MCP servers that lazily initializes them
+const mcpServersProxy = new Proxy({}, {
+  get(target, prop) {
+    if (prop === 'cookMCPServer') {
+      return getCookMCPServer();
+    }
+    if (prop === 'nutritionMCPServer') {
+      return getNutritionMCPServer();
+    }
+    return undefined;
+  },
+  ownKeys() {
+    return ['cookMCPServer', 'nutritionMCPServer'];
+  },
+  has(target, prop) {
+    return prop === 'cookMCPServer' || prop === 'nutritionMCPServer';
+  }
+});
 
 export const mastra = new Mastra({
   workflows: { cookingNutritionWorkflow },
@@ -80,10 +114,7 @@ export const mastra = new Mastra({
       apiEmail: globalThis.process?.env?.CLOUDFLARE_ACCOUNT_EMAIL || "",
     },
   }),
-  mcpServers: {
-    cookMCPServer,
-    nutritionMCPServer,
-  },
+  mcpServers: mcpServersProxy,
   server: {
     timeout: 30000,
     apiRoutes: [
