@@ -107,9 +107,9 @@ let oauth2Client: FatSecretOAuth2 | null = null;
 
 export function initializeFatSecretOAuth2(scope?: string): FatSecretOAuth2 {
   if (!oauth2Client) {
-    const clientId = process.env.FATSECRET_CLIENT_ID;
-    const clientSecret = process.env.FATSECRET_CLIENT_SECRET;
-    const envScope = process.env.FATSECRET_SCOPE;
+    const clientId = globalThis.process?.env?.FATSECRET_CLIENT_ID;
+    const clientSecret = globalThis.process?.env?.FATSECRET_CLIENT_SECRET;
+    const envScope = globalThis.process?.env?.FATSECRET_SCOPE;
 
     if (!clientId || !clientSecret) {
       throw new Error(

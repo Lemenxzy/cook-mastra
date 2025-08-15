@@ -74,10 +74,10 @@ export const mastra = new Mastra({
   },
   deployer: new CloudflareDeployer({
     projectName: "cook-mastra-api",
-    scope: process.env.CLOUDFLARE_ACCOUNT_EMAIL || "",
+    scope: globalThis.process?.env?.CLOUDFLARE_ACCOUNT_EMAIL || "",
     auth: {
-      apiToken: process.env.CLOUDFLARE_API_TOKEN || "",
-      apiEmail: process.env.CLOUDFLARE_ACCOUNT_EMAIL || "",
+      apiToken: globalThis.process?.env?.CLOUDFLARE_API_TOKEN || "",
+      apiEmail: globalThis.process?.env?.CLOUDFLARE_ACCOUNT_EMAIL || "",
     },
   }),
   mcpServers: {

@@ -8,7 +8,7 @@ const cookingMCPClient = new MCPClient({
     cooking: {
       url: new URL(
         `/api/mcp/cookMCPServer/mcp`,
-        process.env.NODE_ENV === "production"
+        globalThis.process?.env?.NODE_ENV === "production"
           ? "https://cook-mastra-api.chuzilaoxu.uk"
           : "http://localhost:4111"
       ),
