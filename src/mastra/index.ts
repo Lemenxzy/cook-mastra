@@ -9,8 +9,8 @@ import {createNutritionMCPServer} from './mcp/mcp-nutrition/nutrition-server';
 import {createCookMCPServer} from './mcp/mcp-cooking/mcp-server';
 import { LazyMCPServer } from './mcp/lazy-mcp-server';
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
-import { config } from "dotenv";
 
+// import { config } from "dotenv";
 // if (process && process.env && process.env.NODE_ENV === "development") {
 //   config();
 //   if (
@@ -149,31 +149,40 @@ export const mastra = new Mastra({
 
 import { Hono } from 'hono';
 
-// Create a Hono app to handle requests
-const app = new Hono();
+// Lazy initialization of Hono app
+let app: Hono | null = null;
 
-// Mount Mastra's API routes
-const serverConfig = mastra.getServer();
-if (serverConfig?.apiRoutes) {
-  for (const route of serverConfig.apiRoutes) {
-    let handler;
+async function getApp(): Promise<Hono> {
+  if (!app) {
+    app = new Hono();
     
-    if ('handler' in route) {
-      handler = route.handler;
-    } else if ('createHandler' in route) {
-      handler = await route.createHandler({ mastra });
-    } else {
-      continue;
+    // Mount Mastra's API routes
+    const serverConfig = mastra.getServer();
+    if (serverConfig?.apiRoutes) {
+      for (const route of serverConfig.apiRoutes) {
+        let handler;
+        
+        if ('handler' in route) {
+          handler = route.handler;
+        } else if ('createHandler' in route) {
+          handler = await route.createHandler({ mastra });
+        } else {
+          continue;
+        }
+        
+        app.on(route.method.toLowerCase() as any, route.path, handler);
+      }
     }
-    
-    app.on(route.method.toLowerCase() as any, route.path, handler);
   }
+  
+  return app;
 }
 
 // Cloudflare Workers export
 export default {
   async fetch(request: Request, env: any, ctx: any) {
-    return app.fetch(request, env, ctx);
+    const honoApp = await getApp();
+    return honoApp.fetch(request, env, ctx);
   },
   
   async scheduled(event: any, env: any, ctx: any) {
