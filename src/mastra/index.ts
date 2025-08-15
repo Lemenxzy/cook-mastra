@@ -11,18 +11,18 @@ import { LazyMCPServer } from './mcp/lazy-mcp-server';
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 import { config } from "dotenv";
 
-if (process && process.env && process.env.NODE_ENV === "development") {
-  config();
-  if (
-    typeof process !== "undefined" &&
-    process?.versions?.node &&
-    process.env.PROXY_URL
-  ) {
-    const { setGlobalDispatcher, ProxyAgent } = await import("undici");
-    setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
-    console.log("[proxy] using", process.env.PROXY_URL);
-  }
-}
+// if (process && process.env && process.env.NODE_ENV === "development") {
+//   config();
+//   if (
+//     typeof process !== "undefined" &&
+//     process?.versions?.node &&
+//     process.env.PROXY_URL
+//   ) {
+//     const { setGlobalDispatcher, ProxyAgent } = await import("undici");
+//     setGlobalDispatcher(new ProxyAgent(process.env.PROXY_URL));
+//     console.log("[proxy] using", process.env.PROXY_URL);
+//   }
+// }
 
 // Create lazy-loaded MCP servers for Cloudflare Workers compatibility
 const cookMCPServer = new LazyMCPServer(
