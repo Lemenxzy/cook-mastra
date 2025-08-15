@@ -174,11 +174,9 @@ export const mastra = new Mastra({
           }
         },
       }),
-      // 路径转发：因为CloudflareDeployer不暴露原生workflow API，需要转发
       registerApiRoute("/workflows/cookingNutritionWorkflow/create-run", {
         method: "POST",
         handler: async (c: any) => {
-          // 直接调用Mastra工作流API
           try {
             const body = await c.req.json();
             const workflows = mastra.getWorkflows();
@@ -238,56 +236,5 @@ export const mastra = new Mastra({
   },
 });
 
-import { Hono } from 'hono';
-
-// Lazy initialization of Hono app
-let app: Hono | null = null;
-
-async function getApp(): Promise<Hono> {
-  if (!app) {
-    app = new Hono();
-    
-    // Mount Mastra's API routes
-    const serverConfig = mastra.getServer();
-    if (serverConfig?.apiRoutes) {
-      console.log("Mounting API routes...", serverConfig.apiRoutes);
-      for (const route of serverConfig.apiRoutes) {
-        let handler;
-        
-        if ('handler' in route) {
-          handler = route.handler;
-        } else if ('createHandler' in route) {
-          handler = await route.createHandler({ mastra });
-        } else {
-          continue;
-        }
-        
-        app.on(route.method.toLowerCase() as any, route.path, handler);
-      }
-    }
-  }
-  
-  return app;
-}
-
-// Cloudflare Workers export
-export default {
-  async fetch(request: Request, env: any, ctx: any) {
-    const honoApp = await getApp();
-    return honoApp.fetch(request, env, ctx);
-  },
-  
-  async scheduled(event: any, env: any, ctx: any) {
-    console.log("Cron job triggered - warming up MCP servers");
-    try {
-      const startTime = Date.now();
-      await Promise.all([warmupCookServer(), warmupNutritionServer()]);
-      const endTime = Date.now();
-      console.log(`Cron warmup completed in ${endTime - startTime}ms`);
-    } catch (error) {
-      console.error("Cron warmup failed:", error);
-    }
-  }
-};
 
 
