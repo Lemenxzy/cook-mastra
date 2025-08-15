@@ -112,7 +112,7 @@ export class CookingAPI {
             
             // 处理步骤开始
             else if (parsed.type === 'step-start' && parsed.payload) {
-              const stepName = parsed.payload.stepName;
+              const stepName = parsed.payload.id;
               const stepIndex = steps.findIndex(s => s.name === stepName);
               
               if (stepIndex !== -1) {
@@ -131,7 +131,7 @@ export class CookingAPI {
             
             // 处理步骤结果
             else if (parsed.type === 'step-result' && parsed.payload) {
-              const stepName = parsed.payload.stepName;
+              const stepName = parsed.payload.id;
               const stepIndex = steps.findIndex(s => s.name === stepName);
               
               if (stepIndex !== -1) {
@@ -148,8 +148,8 @@ export class CookingAPI {
               }
               
               // 如果是最后一步，包含最终结果
-              if (stepName === 'integrate-with-agent' && parsed.payload.result) {
-                const result = parsed.payload.result;
+              if (stepName === 'integrate-with-agent' && parsed.payload.output) {
+                const result = parsed.payload.output;
                 if (result.response) {
                   yield {
                     content: result.response,
