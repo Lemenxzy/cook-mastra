@@ -1,21 +1,5 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { MCPClient } from "@mastra/mcp";
-
-
-// 创建专门的营养查询客户端 - 只连接nutrition server
-const nutritionMCPClient = new MCPClient({
-  servers: {
-    nutrition: {
-      url: new URL(
-        `/api/mcp/nutritionMCPServer/mcp`,
-        globalThis.process?.env?.NODE_ENV === "production"
-          ? "https://cookapi.chuzilaoxu.uk"
-          : "http://localhost:4111"
-      ),
-    },
-  },
-});
 
 export const nutritionQueryAgent = new Agent({
   name: "Nutrition Analysis Specialist",
@@ -55,5 +39,35 @@ export const nutritionQueryAgent = new Agent({
 - 如果用户问烹饪方法，直接说明“这需要烹饪专家来回答”
     `,
   model: openai("gpt-4o-mini"),
-  tools: async () => await nutritionMCPClient.getTools(),
+  tools: async ({ mastra }) => {
+    // 使用Mastra实例中的MCP服务器，确保单一实例化路径
+    if (!mastra) {
+      throw new Error('Mastra instance not available');
+    }
+    
+    const mcpServers = mastra.getMCPServers();
+    if (!mcpServers) {
+      throw new Error('MCP servers not initialized in mastra instance');
+    }
+    
+    const nutritionServer = mcpServers.nutritionMCPServer;
+    if (!nutritionServer) {
+      throw new Error('Nutrition MCP server not found in mastra instance');
+    }
+    
+    const toolsInfo = nutritionServer.getToolListInfo();
+    
+    // 将工具列表转换为ToolsInput格式
+    const toolsMap: Record<string, any> = {};
+    for (const tool of toolsInfo.tools) {
+      toolsMap[tool.name] = {
+        description: tool.description,
+        parameters: tool.inputSchema,
+        execute: async (params: any) => {
+          return await nutritionServer.executeTool(tool.name, params);
+        }
+      };
+    }
+    return toolsMap;
+  },
 });

@@ -28,7 +28,7 @@ import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 let cookMCPServer: LazyMCPServer | null = null;
 let nutritionMCPServer: LazyMCPServer | null = null;
 
-function getCookMCPServer(): LazyMCPServer {
+export function getCookMCPServer(): LazyMCPServer {
   if (!cookMCPServer) {
     cookMCPServer = new LazyMCPServer(
       createCookMCPServer,
@@ -42,7 +42,7 @@ function getCookMCPServer(): LazyMCPServer {
   return cookMCPServer;
 }
 
-function getNutritionMCPServer(): LazyMCPServer {
+export function getNutritionMCPServer(): LazyMCPServer {
   if (!nutritionMCPServer) {
     nutritionMCPServer = new LazyMCPServer(
       createNutritionMCPServer,
