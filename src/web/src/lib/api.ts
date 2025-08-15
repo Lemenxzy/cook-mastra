@@ -8,41 +8,6 @@ export class CookingAPI {
     this.baseUrl = `${getApiBaseUrl()}`;
   }
 
-  async executeWorkflow(query: string): Promise<WorkflowResponse> {
-    // 先创建 workflow run
-    const createRunResponse = await fetch(`${this.baseUrl}/workflows/cookingNutritionWorkflow/create-run`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ inputData: { query } }),
-    });
-
-    if (!createRunResponse.ok) {
-      throw new Error(`Failed to create workflow run: ${createRunResponse.status}`);
-    }
-
-    const runData = await createRunResponse.json();
-    const runId = runData.runId || runData.id;
-
-    if (!runId) {
-      throw new Error('No runId returned from create-run');
-    }
-
-    // 启动 workflow
-    const startResponse = await fetch(`${this.baseUrl}/workflows/cookingNutritionWorkflow/start?runId=${runId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!startResponse.ok) {
-      throw new Error(`HTTP error! status: ${startResponse.status}`);
-    }
-
-    return startResponse.json();
-  }
 
   async *executeWorkflowStream(query: string): AsyncGenerator<{
     content?: string;
@@ -70,8 +35,8 @@ export class CookingAPI {
       throw new Error('No runId returned from create-run');
     }
 
-    // 使用 streamVNext 接口和 runId
-    const response = await fetch(`${this.baseUrl}/workflows/cookingNutritionWorkflow/streamVNext?runId=${runId}`, {
+    // 使用 stream 接口和 runId  
+    const response = await fetch(`${this.baseUrl}/workflows/cookingNutritionWorkflow/stream?runId=${runId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

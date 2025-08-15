@@ -174,6 +174,66 @@ export const mastra = new Mastra({
           }
         },
       }),
+      // 路径转发：因为CloudflareDeployer不暴露原生workflow API，需要转发
+      registerApiRoute("/workflows/cookingNutritionWorkflow/create-run", {
+        method: "POST",
+        handler: async (c: any) => {
+          // 直接调用Mastra工作流API
+          try {
+            const body = await c.req.json();
+            const workflows = mastra.getWorkflows();
+            const workflow = workflows.cookingNutritionWorkflow;
+            const run = await workflow.createRun(body.inputData);
+            return c.json({ runId: run.runId, id: run.runId, workflowId: run.workflowId });
+          } catch (error) {
+            console.error('Create run error:', error);
+            return c.json({ error: 'Failed to create run' }, 500);
+          }
+        },
+      }),
+      registerApiRoute("/workflows/cookingNutritionWorkflow/stream", {
+        method: "POST",
+        handler: async (c: any) => {
+          try {
+            const body = await c.req.json();
+            const workflows = mastra.getWorkflows();
+            const workflow = workflows.cookingNutritionWorkflow;
+            
+            // 直接创建run并流式执行
+            const run = await workflow.createRun(body.inputData);
+            const { stream } = run.stream({ inputData: body.inputData });
+            
+            // 创建SSE流
+            const { readable, writable } = new TransformStream();
+            const writer = writable.getWriter();
+            
+            // 异步处理流
+            (async () => {
+              try {
+                for await (const event of stream) {
+                  await writer.write(new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`));
+                }
+              } catch (error) {
+                console.error('Stream error:', error);
+                await writer.write(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: 'Stream failed' })}\n\n`));
+              } finally {
+                await writer.close();
+              }
+            })();
+            
+            return new Response(readable, {
+              headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+              },
+            });
+          } catch (error) {
+            console.error('Stream workflow error:', error);
+            return c.json({ error: 'Failed to stream workflow' }, 500);
+          }
+        },
+      }),
     ],
   },
 });
@@ -190,6 +250,7 @@ async function getApp(): Promise<Hono> {
     // Mount Mastra's API routes
     const serverConfig = mastra.getServer();
     if (serverConfig?.apiRoutes) {
+      console.log("Mounting API routes...", serverConfig.apiRoutes);
       for (const route of serverConfig.apiRoutes) {
         let handler;
         

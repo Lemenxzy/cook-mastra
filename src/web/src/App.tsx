@@ -107,15 +107,13 @@ function App() {
           }
         }
       } catch (streamError) {
-        // 如果流式失败，尝试普通API
-        console.warn('流式API失败，尝试普通API:', streamError);
+        // 流式API失败，显示错误
+        console.error('流式API失败:', streamError);
         setCurrentWorkflowStep(null);
-        const response = await api.executeWorkflow(query);
-        fullContent = response.response;
         
         setMessages(prev => prev.map(msg => 
           msg.id === assistantMessageId 
-            ? { ...msg, content: fullContent }
+            ? { ...msg, content: '抱歉，处理您的请求时出现了问题。请稍后重试。' }
             : msg
         ));
       }
