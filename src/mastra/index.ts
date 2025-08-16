@@ -143,7 +143,8 @@ export const mastra = new Mastra({
         method: "GET",
         handler: async (c) => {
           try {
-            console.log("开始预热MCP服务器...");
+            const isInternalCall = c.req.header('X-Internal-Call') === 'true';
+            console.log(isInternalCall ? "Cron 内部预热MCP服务器..." : "外部请求预热MCP服务器...");
             const startTime = Date.now();
             
             // 并行预热两个MCP服务器
@@ -159,6 +160,7 @@ export const mastra = new Mastra({
               status: "warmup_completed",
               timestamp: new Date().toISOString(),
               duration_ms: endTime - startTime,
+              source: isInternalCall ? "cron" : "external",
               servers: {
                 cookMCPServer: cookResult ? "initialized" : "failed",
                 nutritionMCPServer: nutritionResult ? "initialized" : "failed"

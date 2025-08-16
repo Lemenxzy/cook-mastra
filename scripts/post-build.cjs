@@ -13,20 +13,25 @@ const scheduledFunction = `
     console.log("Cron job triggered - warming up MCP servers");
     try {
       const startTime = Date.now();
-      // 这里需要访问我们的warmup函数，但由于构建后的代码结构复杂，
-      // 我们直接在这里重新实现简化的预热逻辑
       
-      // 调用warmup端点进行预热
-      try {
-        const response = await fetch('https://cookapi.chuzilaoxu.uk/warmup');
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Warmup successful:', result);
-        } else {
-          console.error('Warmup failed:', response.status);
+      // 通过创建一个内部请求来调用 warmup 端点，避免外部 HTTP 调用
+      const request = new Request('http://localhost/warmup', {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'CloudflareWorker-Cron',
+          'X-Internal-Call': 'true'
         }
-      } catch (error) {
-        console.error('Warmup request failed:', error);
+      });
+      
+      // 获取应用实例并调用内部处理器
+      const app = await createHonoServer(mastra);
+      const response = await app.fetch(request, env, context);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Warmup successful:', result);
+      } else {
+        console.error('Warmup failed:', response.status);
       }
       
       const endTime = Date.now();
